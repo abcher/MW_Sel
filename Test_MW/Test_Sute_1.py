@@ -18,6 +18,8 @@ import Tools
 from Test_Oracule import Oracule
 from Base_Test_Case import TestBase
 from Tools import DataGenerator
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
 
 
  
@@ -40,8 +42,15 @@ class TestMW_General(TestBase):
     @staticmethod
     def parametrize(testcase_klass, param=None):
         """ Create a suite containing all tests taken from the given
-            subclass, passing them the parameter 'param'.
-        """
+            subclass, passing them the two lists of parameters 'param' and 'params2'.
+            Made for purpose of test parametrization.
+            Using:
+              params=["30.03.2020","31.03.2020"]
+              params2=["Ivan","Stepan"]
+              for paramtr in params:
+                    for paramtr2 in params2:
+                              suite.addTest(TestMW_General("test_book_price",Param=paramtr,secondParam=paramtr2))
+        """     
         testloader = unittest.TestLoader()
         testnames = testloader.getTestCaseNames(TestMW_General)
         suite = unittest.TestSuite()
@@ -94,23 +103,31 @@ class TestMW_General(TestBase):
 
           time.sleep(5)
           #handle alert about no mail 
-          alert = self.driver.switch_to_alert()
-          alert.accept()
-          time.sleep(2)
+          try:
+             WebDriverWait(self.driver, 5).until(EC.alert_is_present(),
+                                   "Timed out waiting for PA creation " +
+                                   "confirmation popup to appear.")
+
+             alert = self.driver.switch_to_alert()
+             alert.accept()
+             print ("alert accepted")
+          except TimeoutException:
+             print ("no alert")
+
          
     #service methods    
 if __name__ == "__main__":
     suite = unittest.TestSuite()
 
-    suite.addTest(TestMW_General("test_find_price_in_QD"))
-    suite.addTest(TestMW_General("test_login_user"))
+    #suite.addTest(TestMW_General("test_find_price_in_QD"))
+    #suite.addTest(TestMW_General("test_login_user"))
 
     params=["30.03.2020","31.03.2020"]
     params2=["Ivan","Stepan"]
 
-    #for paramtr in params:
-    #    for paramtr2 in params2:
-    #       suite.addTest(TestMW_General("test_book_price",Param=paramtr,secondParam=paramtr2))
+    for paramtr in params:
+        for paramtr2 in params2:
+           suite.addTest(TestMW_General("test_book_price",Param=paramtr,secondParam=paramtr2))
     
     unittest.TextTestRunner(verbosity=2).run(suite)
     #unittest.main()
